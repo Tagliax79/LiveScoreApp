@@ -5,11 +5,15 @@ from api import fetch_live_matches, fetch_match_details, fetch_match_statistics,
 
 app = Flask(__name__)
 
-# Recupera la chiave API di OpenAI dalle variabili d'ambiente
-openai.api_key = os.getenv("OPENAI_KEY")
+# Recupera la chiave API di OpenAI (verifica entrambe le variabili d'ambiente)
+openai.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY")
 
 # Funzione per generare un commento sulla partita usando ChatGPT
 def generate_commentary(match_data):
+    if not openai.api_key:
+        print("Errore: Chiave API OpenAI non trovata.")
+        return "Errore: Configurazione API OpenAI mancante."
+
     try:
         prompt = f"Descrivi la partita tra {match_data['event']['homeTeam']['name']} e {match_data['event']['awayTeam']['name']}. Il punteggio finale è stato {match_data['event']['homeScore']['display']} - {match_data['event']['awayScore']['display']}."
 
