@@ -1,40 +1,40 @@
 import os
-import openai
 from flask import Flask, render_template, jsonify
+import openai
 from api import fetch_live_matches, fetch_match_details, fetch_match_statistics, fetch_match_scorers, fetch_match_incidents
 
 app = Flask(__name__)
 
-# Recupera la chiave API di OpenAI (verifica entrambe le variabili d'ambiente)
-openai.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY")
+# Imposta la chiave API di OpenAI
+openai.api_key = os.getenv("OPENAI_KEY")
 
-# Funzione per generare un commento sulla partita usando ChatGPT
 def generate_commentary(match_data):
+    """Genera un commento breve sulla partita utilizzando GPT-3.5."""
     if not openai.api_key:
-        print("Errore: Chiave API OpenAI non trovata.")
-        return "Errore: Configurazione API OpenAI mancante."
+        return "Non è stato possibile generare un commento per questa partita."
+
+    prompt = f"""
+    Sei un commentatore sportivo. Analizza brevemente la partita tra {match_data['event']['homeTeam']['name']} e {match_data['event']['awayTeam']['name']}.
+    Risultato: {match_data['event']['homeScore']['display']} - {match_data['event']['awayScore']['display']}.
+    Sii conciso e oggettivo.
+    """
 
     try:
-        prompt = f"Descrivi la partita tra {match_data['event']['homeTeam']['name']} e {match_data['event']['awayTeam']['name']}. Il punteggio finale è stato {match_data['event']['homeScore']['display']} - {match_data['event']['awayScore']['display']}."
-
         response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "system", "content": "Sei un commentatore sportivo."},
-                      {"role": "user", "content": prompt}]
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "Fornisci un'analisi breve e concisa della partita."},
+                      {"role": "user", "content": prompt}],
+            max_tokens=50,  # Limita la lunghezza della risposta
+            timeout=5  # Imposta un timeout breve per evitare attese lunghe
         )
-
-        comment = response["choices"][0]["message"]["content"].strip()
-        print(f"Commento ChatGPT: {comment}")  # Debug per controllare nei log
-        return comment
-
+        return response["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        print(f"Errore nella generazione del commento: {e}")
-        return "Non è stato possibile generare un commento per questa partita."
+        return f"Errore nella generazione del commento: {str(e)}"
 
 @app.route("/")
 def index():
     live_matches = fetch_live_matches()
-
+    
     if "error" in live_matches:
         return render_template("index.html", error=live_matches["error"])
 
@@ -50,11 +50,10 @@ def match_details(match_id):
     if "error" in match_data:
         return jsonify(match_data)
 
-    # Genera il commento usando OpenAI
     commento_chatgpt = generate_commentary(match_data)
 
     return render_template("match.html", match=match_data, statistics=statistics, scorers=scorers, incidents=incidents, commento=commento_chatgpt)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Usa la porta dinamica fornita da Render
+    port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
