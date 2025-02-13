@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettagli Partita</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        .match-info {
+            text-align: center;
+            padding: 10px;
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stats, .events {
+            margin-top: 20px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .goal {
+            color: green;
+            font-weight: bold;
+        }
+        .yellow-card {
+            color: orange;
+            font-weight: bold;
+        }
+        .red-card {
+            color: red;
+            font-weight: bold;
+        }
+        .substitution {
+            color: blue;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dettagli della Partita</h1>
+        
+        {% if match %}
+            <div class="match-info">
+                <h2>{{ match.event.tournament.name }} - {{ match.event.roundInfo.name }}</h2>
+                <p class="score">
+                    {{ match.event.homeTeam.name }} {{ match.event.homeScore.display }} - {{ match.event.awayScore.display }} {{ match.event.awayTeam.name }}
+                </p>
+                <p><strong>Stadio:</strong> {{ match.event.venue.name }} ({{ match.event.venue.city.name }})</p>
+                <p><strong>Arbitro:</strong> {{ match.event.referee.name }}</p>
+                <p><strong>Pubblico:</strong> {{ match.event.attendance }}</p>
+                <p><strong>Stato:</strong> {{ match.event.status.description }}</p>
+            </div>
+
+            <div class="stats">
+                <h3>Statistiche della Partita</h3>
+                {% if statistics and statistics.statistics %}
+                    {% for stat_group in statistics.statistics %}
+                        {% if stat_group.period == "ALL" %}
+                            {% for group in stat_group.groups %}
+                                <h4>{{ group.groupName }}</h4>
+                                <ul>
+                                    {% for stat in group.statisticsItems %}
+                                        <li><strong>{{ stat.name }}:</strong> 
+                                            {{ match.event.homeTeam.name }} {{ stat.home }} - {{ stat.away }} {{ match.event.awayTeam.name }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p>Statistiche non disponibili</p>
+                {% endif %}
+            </div>
+
+            <div class="events">
+                <h3>Eventi della Partita</h3>
+                {% if incidents and incidents.incidents %}
+                    <ul>
+                        {% for event in incidents.incidents %}
+                            <li>
+                                <strong>{{ event.time }}'</strong> - 
+                                {% if event.incidentType == "goal" %}
+                                    <span class="goal">⚽ Gol!</span> {{ event.player.name }}
+                                    {% if event.assist1 %} (Assist: {{ event.assist1.name }}) {% endif %}
+                                {% elif event.incidentType == "card" %}
+                                    {% if event.incidentClass == "yellow" %}
+                                        <span class="yellow-card">🟨 Ammonizione</span> {{ event.player.name }}
+                                    {% elif event.incidentClass == "red" %}
+                                        <span class="red-card">🟥 Espulsione</span> {{ event.player.name }}
+                                    {% endif %}
+                                {% elif event.incidentType == "substitution" %}
+                                    <span class="substitution">🔄 Sostituzione</span> {{ event.playerOut.name }} ➡️ {{ event.playerIn.name }}
+                                {% elif event.incidentType == "penalty" %}
+                                    <span class="goal">⚽ Gol su rigore!</span> {{ event.player.name }}
+                                {% else %}
+                                    {{ event.text }}
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Nessun evento disponibile.</p>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <p>Dettagli non disponibili</p>
+        {% endif %}
+
+        <a href="/" class="back-link">Torna alla lista partite</a>
+    </div>
+</body>
+</html>
