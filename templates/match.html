@@ -76,7 +76,9 @@
         
         {% if match %}
             <div class="match-info">
-                <h2>{{ match.event.tournament.name }} - {{ match.event.roundInfo.name }}</h2>
+                <h2>{{ match.event.tournament.name }} 
+                    {% if match.event.roundInfo is defined %}- {{ match.event.roundInfo.name }}{% endif %}
+                </h2>
                 <p class="score">
                     {{ match.event.homeTeam.name }} {{ match.event.homeScore.display }} - {{ match.event.awayScore.display }} {{ match.event.awayTeam.name }}
                 </p>
