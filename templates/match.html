@@ -76,13 +76,16 @@
         
         {% if match %}
             <div class="match-info">
-                <h2>{{ match.event.tournament.name }} 
-                    {% if match.event.roundInfo is defined %}- {{ match.event.roundInfo.name }}{% endif %}
-                </h2>
+                <h2>{{ match.event.tournament.name }} - {{ match.event.roundInfo.name }}</h2>
                 <p class="score">
                     {{ match.event.homeTeam.name }} {{ match.event.homeScore.display }} - {{ match.event.awayScore.display }} {{ match.event.awayTeam.name }}
                 </p>
-                <p><strong>Stadio:</strong> {{ match.event.venue.name }} ({{ match.event.venue.city.name }})</p>
+                {% if match.event.venue %}
+                    <p><strong>Stadio:</strong> {{ match.event.venue.name }} 
+                    {% if match.event.venue.city %} ({{ match.event.venue.city.name }}){% endif %}</p>
+                {% else %}
+                    <p><strong>Stadio:</strong> Non disponibile</p>
+                {% endif %}
                 <p><strong>Arbitro:</strong> {{ match.event.referee.name }}</p>
                 <p><strong>Pubblico:</strong> {{ match.event.attendance }}</p>
                 <p><strong>Stato:</strong> {{ match.event.status.description }}</p>
