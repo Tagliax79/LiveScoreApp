@@ -46,15 +46,17 @@ def generate_commentary(match_data, statistics, incidents):
     event_text = ""
     if incidents and "incidents" in incidents:
         for event in incidents["incidents"]:
+            team_name = event.get("team", {}).get("name", "Sconosciuto")  # Se manca, mostra "Sconosciuto"
+            
             if event["incidentType"] == "goal":
-                event_text += f"⚽ Gol di {event['player']['name']} per il {event['team']['name']} al minuto {event['time']}!\n"
+                event_text += f"⚽ Gol di {event['player']['name']} per il {team_name} al minuto {event['time']}!\n"
             elif event["incidentType"] == "card":
                 if event["incidentClass"] == "yellow":
-                    event_text += f"🟨 Ammonizione per {event['player']['name']} ({event['team']['name']}) al {event['time']}'.\n"
+                    event_text += f"🟨 Ammonizione per {event['player']['name']} ({team_name}) al {event['time']}'.\n"
                 elif event["incidentClass"] == "red":
-                    event_text += f"🟥 ESPULSIONE! {event['player']['name']} del {event['team']['name']} al {event['time']}'.\n"
+                    event_text += f"🟥 ESPULSIONE! {event['player']['name']} del {team_name} al {event['time']}'.\n"
             elif event["incidentType"] == "substitution":
-                event_text += f"🔄 Cambio: {event['playerOut']['name']} esce, entra {event['playerIn']['name']} per il {event['team']['name']} al {event['time']}'.\n"
+                event_text += f"🔄 Cambio: {event['playerOut']['name']} esce, entra {event['playerIn']['name']} per il {team_name} al {event['time']}'.\n"
 
     # Creazione del prompt per ChatGPT
     prompt = f"""
