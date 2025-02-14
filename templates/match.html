@@ -91,6 +91,66 @@
                 <p><strong>Stato:</strong> {{ match.event.status.description }}</p>
             </div>
 
+            <!-- SEZIONE GOL SUBITO DOPO IL RISULTATO -->
+            <div class="events">
+                <h3>Gol della Partita</h3>
+                {% if incidents and incidents.incidents %}
+                    <ul>
+                        {% for event in incidents.incidents %}
+                            {% if event.incidentType == "goal" %}
+                                <li>
+                                    <strong>{{ event.time }}'</strong> - 
+                                    <span class="goal">⚽ Gol!</span> {{ event.player.name }}
+                                    {% if event.assist1 %} (Assist: {{ event.assist1.name }}) {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Nessun gol disponibile.</p>
+                {% endif %}
+            </div>
+
+            <!-- SEZIONE COMMENTO GENERATO DA OPENAI -->
+            {% if commento %}
+            <div class="commento">
+                <h2>Analisi della Partita</h2>
+                <p>{{ commento }}</p>
+            </div>
+            {% endif %}
+
+            <!-- SEZIONE EVENTI (AMMONIZIONI, ESPULSIONI, ECC.) -->
+            <div class="events">
+                <h3>Altri Eventi della Partita</h3>
+                {% if incidents and incidents.incidents %}
+                    <ul>
+                        {% for event in incidents.incidents %}
+                            {% if event.incidentType != "goal" %}
+                                <li>
+                                    <strong>{{ event.time }}'</strong> - 
+                                    {% if event.incidentType == "card" %}
+                                        {% if event.incidentClass == "yellow" %}
+                                            <span class="yellow-card">🟨 Ammonizione</span> {{ event.player.name }}
+                                        {% elif event.incidentClass == "red" %}
+                                            <span class="red-card">🟥 Espulsione</span> {{ event.player.name }}
+                                        {% endif %}
+                                    {% elif event.incidentType == "substitution" %}
+                                        <span class="substitution">🔄 Sostituzione</span> {{ event.playerOut.name }} ➡️ {{ event.playerIn.name }}
+                                    {% elif event.incidentType == "penalty" %}
+                                        <span class="goal">⚽ Gol su rigore!</span> {{ event.player.name }}
+                                    {% else %}
+                                        {{ event.text }}
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Nessun evento disponibile.</p>
+                {% endif %}
+            </div>
+
+            <!-- SEZIONE STATISTICHE DELLA PARTITA -->
             <div class="stats">
                 <h3>Statistiche della Partita</h3>
                 {% if statistics and statistics.statistics %}
@@ -112,45 +172,6 @@
                     <p>Statistiche non disponibili</p>
                 {% endif %}
             </div>
-
-            <div class="events">
-                <h3>Eventi della Partita</h3>
-                {% if incidents and incidents.incidents %}
-                    <ul>
-                        {% for event in incidents.incidents %}
-                            <li>
-                                <strong>{{ event.time }}'</strong> - 
-                                {% if event.incidentType == "goal" %}
-                                    <span class="goal">⚽ Gol!</span> {{ event.player.name }}
-                                    {% if event.assist1 %} (Assist: {{ event.assist1.name }}) {% endif %}
-                                {% elif event.incidentType == "card" %}
-                                    {% if event.incidentClass == "yellow" %}
-                                        <span class="yellow-card">🟨 Ammonizione</span> {{ event.player.name }}
-                                    {% elif event.incidentClass == "red" %}
-                                        <span class="red-card">🟥 Espulsione</span> {{ event.player.name }}
-                                    {% endif %}
-                                {% elif event.incidentType == "substitution" %}
-                                    <span class="substitution">🔄 Sostituzione</span> {{ event.playerOut.name }} ➡️ {{ event.playerIn.name }}
-                                {% elif event.incidentType == "penalty" %}
-                                    <span class="goal">⚽ Gol su rigore!</span> {{ event.player.name }}
-                                {% else %}
-                                    {{ event.text }}
-                                {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p>Nessun evento disponibile.</p>
-                {% endif %}
-            </div>
-
-            <!-- SEZIONE COMMENTO GENERATO DA OPENAI -->
-            {% if commento %}
-            <div class="commento">
-                <h2>Analisi della Partita</h2>
-                <p>{{ commento }}</p>
-            </div>
-            {% endif %}
 
         {% else %}
             <p>Dettagli non disponibili</p>
