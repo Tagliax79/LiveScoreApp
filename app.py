@@ -91,20 +91,14 @@ def generate_commentary(match_data, statistics, incidents):
 @app.route("/")
 def index():
     live_matches = fetch_live_matches()
-    
+
     if "error" in live_matches:
         return render_template("index.html", error=live_matches["error"])
 
-    matches = live_matches.get("events", [])
+    # Estrai i nomi unici dei campionati dalle partite in corso
+    tournaments = sorted(set(match["tournament"]["name"] for match in live_matches.get("events", []) if "tournament" in match))
 
-    # Creiamo un dizionario per raccogliere i tornei unici
-    tournaments = {}
-    for match in matches:
-        tournament = match.get("tournament", {})
-        if tournament:
-            tournaments[tournament["slug"]] = tournament["name"]
-
-    return render_template("index.html", matches=matches, tournaments=tournaments)
+    return render_template("index.html", matches=live_matches.get("events", []), tournaments=tournaments)
 
 @app.route("/match/<match_id>")
 def match_details(match_id):
