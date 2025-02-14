@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Recupera la chiave API di OpenAI
-openai_api_key = os.getenv("OPENAI_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 if not openai_api_key:
     logger.error("ERRORE: La chiave API di OpenAI non è stata trovata nelle variabili d'ambiente!")
