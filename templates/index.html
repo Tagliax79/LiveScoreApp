@@ -9,48 +9,40 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
             display: flex;
         }
         .sidebar {
             width: 250px;
-            background-color: #222;
+            background: #111;
             color: white;
-            padding: 20px;
+            padding: 15px;
             height: 100vh;
         }
         .sidebar h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-        }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar li {
-            padding: 10px;
-            cursor: pointer;
-            background-color: #333;
-            margin-bottom: 5px;
             text-align: center;
         }
-        .sidebar li:hover {
-            background-color: #444;
+        .filter {
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 1px solid #444;
         }
-        .main-content {
+        .filter:hover {
+            background: #222;
+        }
+        .main {
             flex: 1;
             padding: 20px;
         }
         .match-card {
-            background: #f4f4f4;
+            background: white;
             padding: 15px;
             margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
             border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-        }
-        .match-card:hover {
-            background: #ddd;
         }
     </style>
     <script>
@@ -58,7 +50,7 @@
             let matches = document.querySelectorAll('.match-card');
             matches.forEach(match => {
                 if (competition === 'all' || match.getAttribute('data-competition') === competition) {
-                    match.style.display = 'flex';
+                    match.style.display = 'block';
                 } else {
                     match.style.display = 'none';
                 }
@@ -67,24 +59,25 @@
     </script>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>CAMPIONATI IN CORSO</h2>
-        <ul>
-            <li onclick="filterMatches('all')">Tutti</li>
-            {% for competition in competitions %}
-                <li onclick="filterMatches('{{ competition }}')">{{ competition }}</li>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Campionati</h2>
+            <div class="filter" onclick="filterMatches('all')">Tutti</div>
+            {% for tournament in tournaments %}
+                <div class="filter" onclick="filterMatches('{{ tournament.slug }}')">{{ tournament.name }}</div>
             {% endfor %}
-        </ul>
-    </div>
-    <div class="main-content">
-        <h1>Live Score</h1>
-        <h2>Partite in corso:</h2>
-        {% for match in matches %}
-            <div class="match-card" data-competition="{{ match.event.tournament.name }}" onclick="location.href='/match/{{ match.id }}'">
-                <span>{{ match.homeTeam.name }} {{ match.homeScore.display }} - {{ match.awayScore.display }} {{ match.awayTeam.name }}</span>
-                <span>{{ match.event.status.description }}</span>
-            </div>
-        {% endfor %}
+        </div>
+        <div class="main">
+            <h1>Live Score</h1>
+            <h2>Partite in corso:</h2>
+            {% for match in matches %}
+                <div class="match-card" data-competition="{{ match.tournament.slug }}" onclick="location.href='/match/{{ match.id }}'">
+                    <strong>{{ match.homeTeam.name }}</strong> {{ match.homeScore.display }} - {{ match.awayScore.display }} <strong>{{ match.awayTeam.name }}</strong>
+                    <br>
+                    <small>{{ match.status.description }}</small>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>

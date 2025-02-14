@@ -95,7 +95,16 @@ def index():
     if "error" in live_matches:
         return render_template("index.html", error=live_matches["error"])
 
-    return render_template("index.html", matches=live_matches.get("events", []))
+    matches = live_matches.get("events", [])
+
+    # Creiamo un dizionario per raccogliere i tornei unici
+    tournaments = {}
+    for match in matches:
+        tournament = match.get("tournament", {})
+        if tournament:
+            tournaments[tournament["slug"]] = tournament["name"]
+
+    return render_template("index.html", matches=matches, tournaments=tournaments)
 
 @app.route("/match/<match_id>")
 def match_details(match_id):
