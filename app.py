@@ -24,7 +24,6 @@ def generate_commentary(match_data, statistics, incidents):
     away_score = match_data["event"]["awayScore"]["display"]
     status = match_data["event"]["status"]["description"]
 
-    # Determiniamo se la partita è in corso o conclusa
     if "HT" in status or "Intervallo" in status or "Half-time" in status:
         match_phase = "Il primo tempo si è appena concluso."
     elif "FT" in status or "Terminata" in status or "Full-time" in status:
@@ -32,7 +31,6 @@ def generate_commentary(match_data, statistics, incidents):
     else:
         match_phase = f"La partita è attualmente in corso ({status})."
 
-    # Raccolta statistiche principali
     stats_text = ""
     if statistics and "statistics" in statistics:
         for stat_group in statistics["statistics"]:
@@ -42,7 +40,6 @@ def generate_commentary(match_data, statistics, incidents):
                     for stat in group["statisticsItems"]:
                         stats_text += f"- {stat['name']}: {home_team} {stat['home']} - {stat['away']} {away_team}\n"
 
-    # Raccolta eventi principali (goal, cartellini, sostituzioni)
     event_text = ""
     if incidents and "incidents" in incidents:
         for event in incidents["incidents"]:
@@ -58,7 +55,6 @@ def generate_commentary(match_data, statistics, incidents):
             elif event["incidentType"] == "substitution":
                 event_text += f"🔄 Cambio: {event['playerOut']['name']} esce, entra {event['playerIn']['name']} per il {team_name} al {event['time']}'.\n"
 
-    # Creazione del prompt per ChatGPT
     prompt = f"""
     Sei un commentatore sportivo esperto. Scrivi un commento coinvolgente e realistico sulla partita tra {home_team} e {away_team}.
     {match_phase}
@@ -93,23 +89,29 @@ def index():
     live_matches = fetch_live_matches()
     
     if "error" in live_matches:
-        return render_template("index.html", error=live_matches["error"], matches=[])
+        return render_template("index.html", error=live_matches["error"], matches={})
+
+    # Assicuriamoci che matches sia una lista valida
+    matches = live_matches.get("events", [])
+    if not isinstance(matches, list):
+        matches = []
 
     # Raggruppiamo le partite per Paese e Competizione
     grouped_matches = {}
-    for match in live_matches.get("events", []):
-        country_name = match["tournament"]["category"]["name"]
-        competition_name = match["tournament"]["name"]
+    for match in matches:
+        tournament = match.get("tournament", {})
+        country = tournament.get("category", {}).get("name", "Sconosciuto")
+        competition = tournament.get("name", "Sconosciuto")
 
-        if country_name not in grouped_matches:
-            grouped_matches[country_name] = {}
+        if country not in grouped_matches:
+            grouped_matches[country] = {}
 
-        if competition_name not in grouped_matches[country_name]:
-            grouped_matches[country_name][competition_name] = []
+        if competition not in grouped_matches[country]:
+            grouped_matches[country][competition] = []
 
-        grouped_matches[country_name][competition_name].append(match)
+        grouped_matches[country][competition].append(match)
 
-    return render_template("index.html", matches=grouped_matches)
+    return render_template("index.html", grouped_matches=grouped_matches)
 
 @app.route("/match/<match_id>")
 def match_details(match_id):
@@ -121,7 +123,6 @@ def match_details(match_id):
     if "error" in match_data:
         return jsonify(match_data)
 
-    # **Aggiungiamo il commento generato da OpenAI**
     commento_chatgpt = generate_commentary(match_data, statistics, incidents)
 
     return render_template("match.html", match=match_data, statistics=statistics, scorers=scorers, incidents=incidents, commento=commento_chatgpt)
