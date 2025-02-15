@@ -1,47 +1,10 @@
 import http.client
-import json
+import base64
 import os
 
-# Configura l'host e l'API key
 RAPIDAPI_HOST = "allsportsapi2.p.rapidapi.com"
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")  # Usa la chiave API dai secrets
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 
-# Funzione per ottenere le partite in corso
-def fetch_live_matches():
-    conn = http.client.HTTPSConnection(RAPIDAPI_HOST)
-    headers = {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': RAPIDAPI_HOST
-    }
-
-    conn.request("GET", "/api/matches/live", headers=headers)
-    res = conn.getresponse()
-    data = res.read()
-
-    try:
-        return json.loads(data.decode("utf-8"))
-    except json.JSONDecodeError:
-        return {"error": "Errore nella decodifica della risposta API"}
-
-# Funzione per ottenere i dettagli di una partita
-def fetch_match_details(match_id):
-    conn = http.client.HTTPSConnection(RAPIDAPI_HOST)
-    headers = {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': RAPIDAPI_HOST
-    }
-
-    endpoint = f"/api/match/{match_id}"
-    conn.request("GET", endpoint, headers=headers)
-    res = conn.getresponse()
-    data = res.read()
-
-    try:
-        return json.loads(data.decode("utf-8"))
-    except json.JSONDecodeError:
-        return {"error": "Errore nella decodifica della risposta API"}
-
-# Funzione per ottenere il logo di un torneo
 def fetch_tournament_logo(tournament_id):
     conn = http.client.HTTPSConnection(RAPIDAPI_HOST)
     headers = {
@@ -54,5 +17,8 @@ def fetch_tournament_logo(tournament_id):
     res = conn.getresponse()
     
     if res.status == 200 and res.getheader('Content-Type') == 'image/png':
-        return f"https://allsportsapi2.p.rapidapi.com/api/tournament/{tournament_id}/image"
+        image_data = res.read()
+        base64_image = base64.b64encode(image_data).decode('utf-8')
+        return f"data:image/png;base64,{base64_image}"
+    
     return None
