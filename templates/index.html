@@ -7,69 +7,133 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
             display: flex;
         }
         .sidebar {
             width: 250px;
-            background: #111;
+            background-color: #222;
             color: white;
             padding: 20px;
             height: 100vh;
+            overflow-y: auto;
         }
-        .sidebar h3 {
-            margin-bottom: 10px;
+        .sidebar h2 {
+            text-align: center;
         }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar li {
+        .country {
             cursor: pointer;
+            font-weight: bold;
             padding: 10px;
             border-bottom: 1px solid #444;
         }
-        .sidebar li:hover {
-            background: #222;
+        .competitions {
+            display: none;
+            list-style: none;
+            padding-left: 15px;
+        }
+        .competitions li {
+            padding: 5px 0;
+        }
+        .competitions li a {
+            color: white;
+            text-decoration: none;
+        }
+        .competitions li a:hover {
+            text-decoration: underline;
         }
         .content {
             flex: 1;
             padding: 20px;
         }
         .match-card {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
             background: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .match-card:hover {
+            background: #eaeaea;
+        }
+        .score {
+            font-weight: bold;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
+    <!-- Sidebar -->
     <div class="sidebar">
-        <h3>Campionati</h3>
-        <ul id="tournament-list">
-            <li onclick="filterMatches('Tutti')">Tutti</li>
-            {% for tournament in tournaments %}
-                <li onclick="filterMatches('{{ tournament }}')">{{ tournament }}</li>
-            {% endfor %}
+        <h2>Campionati</h2>
+        <div class="country" onclick="toggleCompetitions('italy')">🇮🇹 Italia</div>
+        <ul class="competitions" id="italy">
+            <li><a href="#" onclick="filterMatches('Serie A')">Serie A</a></li>
+            <li><a href="#" onclick="filterMatches('Serie B')">Serie B</a></li>
+            <li><a href="#" onclick="filterMatches('Coppa Italia')">Coppa Italia</a></li>
+        </ul>
+        
+        <div class="country" onclick="toggleCompetitions('england')">🏴 Inghilterra</div>
+        <ul class="competitions" id="england">
+            <li><a href="#" onclick="filterMatches('Premier League')">Premier League</a></li>
+            <li><a href="#" onclick="filterMatches('Championship')">Championship</a></li>
+            <li><a href="#" onclick="filterMatches('FA Cup')">FA Cup</a></li>
+        </ul>
+
+        <div class="country" onclick="toggleCompetitions('spain')">🇪🇸 Spagna</div>
+        <ul class="competitions" id="spain">
+            <li><a href="#" onclick="filterMatches('La Liga')">La Liga</a></li>
+            <li><a href="#" onclick="filterMatches('Segunda División')">Segunda División</a></li>
+        </ul>
+
+        <div class="country" onclick="toggleCompetitions('germany')">🇩🇪 Germania</div>
+        <ul class="competitions" id="germany">
+            <li><a href="#" onclick="filterMatches('Bundesliga')">Bundesliga</a></li>
+            <li><a href="#" onclick="filterMatches('2. Bundesliga')">2. Bundesliga</a></li>
+        </ul>
+
+        <div class="country" onclick="toggleCompetitions('europe')">🌍 Competizioni Europee</div>
+        <ul class="competitions" id="europe">
+            <li><a href="#" onclick="filterMatches('Champions League')">Champions League</a></li>
+            <li><a href="#" onclick="filterMatches('Europa League')">Europa League</a></li>
+            <li><a href="#" onclick="filterMatches('Conference League')">Conference League</a></li>
         </ul>
     </div>
 
+    <!-- Main Content -->
     <div class="content">
         <h1>Live Score</h1>
         <h2>Partite in corso:</h2>
-        {% for match in matches %}
-            <div class="match-card" data-competition="{{ match.tournament.name }}" onclick="location.href='/match/{{ match.id }}'">
-                {{ match.homeTeam.name }} {{ match.homeScore.display }} - {{ match.awayScore.display }} {{ match.awayTeam.name }}
-                <br>{{ match.status.description }}
-            </div>
-        {% endfor %}
+        <div id="matches-container">
+            {% for match in matches %}
+                <div class="match-card" data-competition="{{ match.tournament.name }}" onclick="location.href='/match/{{ match.id }}'">
+                    <span>{{ match.homeTeam.name }} <span class="score">{{ match.homeScore.display }} - {{ match.awayScore.display }}</span> {{ match.awayTeam.name }}</span>
+                    <span>{{ match.status.description }}</span>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <script>
-        function filterMatches(tournament) {
-            document.querySelectorAll(".match-card").forEach(match => {
-                match.style.display = (tournament === "Tutti" || match.dataset.competition === tournament) ? "block" : "none";
+        function toggleCompetitions(countryId) {
+            let competitions = document.getElementById(countryId);
+            competitions.style.display = (competitions.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function filterMatches(competitionName) {
+            let matches = document.querySelectorAll('.match-card');
+            matches.forEach(match => {
+                if (match.getAttribute('data-competition') === competitionName || competitionName === "Tutti") {
+                    match.style.display = "flex";
+                } else {
+                    match.style.display = "none";
+                }
             });
         }
     </script>

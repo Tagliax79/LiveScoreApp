@@ -46,7 +46,7 @@ def generate_commentary(match_data, statistics, incidents):
     event_text = ""
     if incidents and "incidents" in incidents:
         for event in incidents["incidents"]:
-            team_name = event.get("team", {}).get("name", "Sconosciuto")  # Se manca, mostra "Sconosciuto"
+            team_name = event.get("team", {}).get("name", "Sconosciuto")
             
             if event["incidentType"] == "goal":
                 event_text += f"⚽ Gol di {event['player']['name']} per il {team_name} al minuto {event['time']}!\n"
@@ -91,14 +91,25 @@ def generate_commentary(match_data, statistics, incidents):
 @app.route("/")
 def index():
     live_matches = fetch_live_matches()
-
+    
     if "error" in live_matches:
-        return render_template("index.html", error=live_matches["error"])
+        return render_template("index.html", error=live_matches["error"], matches=[])
 
-    # Estrai i nomi unici dei campionati dalle partite in corso
-    tournaments = sorted(set(match["tournament"]["name"] for match in live_matches.get("events", []) if "tournament" in match))
+    # Raggruppiamo le partite per Paese e Competizione
+    grouped_matches = {}
+    for match in live_matches.get("events", []):
+        country_name = match["tournament"]["category"]["name"]
+        competition_name = match["tournament"]["name"]
 
-    return render_template("index.html", matches=live_matches.get("events", []), tournaments=tournaments)
+        if country_name not in grouped_matches:
+            grouped_matches[country_name] = {}
+
+        if competition_name not in grouped_matches[country_name]:
+            grouped_matches[country_name][competition_name] = []
+
+        grouped_matches[country_name][competition_name].append(match)
+
+    return render_template("index.html", matches=grouped_matches)
 
 @app.route("/match/<match_id>")
 def match_details(match_id):
