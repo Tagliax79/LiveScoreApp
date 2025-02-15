@@ -28,6 +28,13 @@
             cursor: pointer;
             padding: 10px;
             border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar li img {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
         }
         .sidebar li:hover {
             background: #222;
@@ -57,8 +64,13 @@
             {% for country, tournaments in matches.items() %}
                 <li onclick="toggleDropdown('{{ country }}')"><strong>{{ country }}</strong></li>
                 <ul id="{{ country }}" class="dropdown">
-                    {% for tournament, match_list in tournaments.items() %}
-                        <li onclick="filterMatches('{{ tournament }}')">{{ tournament }}</li>
+                    {% for tournament, data in tournaments.items() %}
+                        <li onclick="filterMatches('{{ tournament }}')">
+                            {% if data.logo %}
+                                <img src="{{ data.logo }}" alt="{{ tournament }} Logo">
+                            {% endif %}
+                            {{ tournament }}
+                        </li>
                     {% endfor %}
                 </ul>
             {% endfor %}
@@ -70,8 +82,8 @@
         <h2>Partite in corso:</h2>
         <div id="matches-container">
             {% for country, tournaments in matches.items() %}
-                {% for tournament, match_list in tournaments.items() %}
-                    {% for match in match_list %}
+                {% for tournament, data in tournaments.items() %}
+                    {% for match in data.matches %}
                         <div class="match-card" data-competition="{{ tournament }}" onclick="location.href='/match/{{ match.id }}'">
                             {{ match.homeTeam.name }} {{ match.homeScore.display }} - {{ match.awayScore.display }} {{ match.awayTeam.name }}
                             <br>{{ match.status.description }}
