@@ -28,13 +28,6 @@
             cursor: pointer;
             padding: 10px;
             border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-        }
-        .sidebar li img {
-            margin-right: 10px;
-            width: 20px;
-            height: 20px;
         }
         .sidebar li:hover {
             background: #222;
@@ -65,12 +58,7 @@
                 <li onclick="toggleDropdown('{{ country }}')"><strong>{{ country }}</strong></li>
                 <ul id="{{ country }}" class="dropdown">
                     {% for tournament, match_list in tournaments.items() %}
-                        <li onclick="filterMatches('{{ tournament }}')">
-                            {% if tournaments[tournament].logo %}
-                                <img src="{{ tournaments[tournament].logo }}" alt="{{ tournament }} Logo">
-                            {% endif %}
-                            {{ tournament }}
-                        </li>
+                        <li onclick="filterMatches('{{ tournament }}')">{{ tournament }}</li>
                     {% endfor %}
                 </ul>
             {% endfor %}
