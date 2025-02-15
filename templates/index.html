@@ -28,13 +28,6 @@
             cursor: pointer;
             padding: 10px;
             border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-        }
-        .sidebar li img {
-            margin-right: 10px;
-            width: 20px;
-            height: 20px;
         }
         .sidebar li:hover {
             background: #222;
@@ -60,15 +53,16 @@
     <div class="sidebar">
         <h3>Campionati</h3>
         <ul id="tournament-list">
+            <!-- Pulsante per mostrare TUTTE le partite -->
             <li onclick="filterMatches('Tutti')"><strong>Tutti</strong></li>
+            <!-- Cicliamo per Paese e Tornei -->
             {% for country, tournaments in matches.items() %}
-                <li onclick="toggleDropdown('{{ country }}')"><strong>{{ country }}</strong></li>
+                <li onclick="toggleDropdown('{{ country }}')">
+                    <strong>{{ country }}</strong>
+                </li>
                 <ul id="{{ country }}" class="dropdown">
                     {% for tournament, match_list in tournaments.items() %}
                         <li onclick="filterMatches('{{ tournament }}')">
-                            {% if tournaments[tournament].logo %}
-                                <img src="{{ tournaments[tournament].logo }}" alt="{{ tournament }} Logo">
-                            {% endif %}
                             {{ tournament }}
                         </li>
                     {% endfor %}
@@ -102,6 +96,7 @@
             }
         }
 
+        // Filtro per mostrare/nascondere match in base al nome della competizione
         function filterMatches(tournament) {
             let matches = document.querySelectorAll(".match-card");
             matches.forEach(match => {
