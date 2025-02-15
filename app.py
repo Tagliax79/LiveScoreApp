@@ -9,9 +9,10 @@ app = Flask(__name__)
 # Imposta la chiave API di OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 def generate_commentary(match_data, statistics, incidents):
     """Genera un commento dettagliato e coinvolgente sulla partita con stile giornalistico."""
-    
+
     if not openai.api_key:
         return "Errore: API Key mancante."
 
@@ -24,6 +25,7 @@ def generate_commentary(match_data, statistics, incidents):
     away_score = match_data["event"]["awayScore"]["display"]
     status = match_data["event"]["status"]["description"]
 
+    # Determiniamo se la partita è in corso o conclusa
     if "HT" in status or "Intervallo" in status or "Half-time" in status:
         match_phase = "Il primo tempo si è appena concluso."
     elif "FT" in status or "Terminata" in status or "Full-time" in status:
@@ -31,6 +33,7 @@ def generate_commentary(match_data, statistics, incidents):
     else:
         match_phase = f"La partita è attualmente in corso ({status})."
 
+    # Raccolta statistiche principali
     stats_text = ""
     if statistics and "statistics" in statistics:
         for stat_group in statistics["statistics"]:
@@ -40,11 +43,12 @@ def generate_commentary(match_data, statistics, incidents):
                     for stat in group["statisticsItems"]:
                         stats_text += f"- {stat['name']}: {home_team} {stat['home']} - {stat['away']} {away_team}\n"
 
+    # Raccolta eventi principali (goal, cartellini, sostituzioni)
     event_text = ""
     if incidents and "incidents" in incidents:
         for event in incidents["incidents"]:
             team_name = event.get("team", {}).get("name", "Sconosciuto")
-            
+
             if event["incidentType"] == "goal":
                 event_text += f"⚽ Gol di {event['player']['name']} per il {team_name} al minuto {event['time']}!\n"
             elif event["incidentType"] == "card":
@@ -55,10 +59,11 @@ def generate_commentary(match_data, statistics, incidents):
             elif event["incidentType"] == "substitution":
                 event_text += f"🔄 Cambio: {event['playerOut']['name']} esce, entra {event['playerIn']['name']} per il {team_name} al {event['time']}'.\n"
 
+    # Creazione del prompt per ChatGPT
     prompt = f"""
     Sei un commentatore sportivo esperto. Scrivi un commento coinvolgente e realistico sulla partita tra {home_team} e {away_team}.
     {match_phase}
-    
+
     RISULTATO ATTUALE: {home_team} {home_score} - {away_score} {away_team}
 
     EVENTI SALIENTI:
@@ -78,25 +83,32 @@ def generate_commentary(match_data, statistics, incidents):
                       {"role": "user", "content": prompt}]
         )
         return response["choices"][0]["message"]["content"].strip()
-    
+
     except Exception as e:
         print("\n=== DEBUG: ERRORE GPT ===")
         print(str(e))  # Stampa l'errore della chiamata a OpenAI
         return f"Errore nella generazione del commento: {str(e)}"
 
+
 @app.route("/")
 def index():
     live_matches = fetch_live_matches()
-    
-    if "error" in live_matches:
-        return render_template("index.html", error=live_matches["error"], matches={})
 
-    # Assicuriamoci che matches sia una lista valida
+    # Debug: Stampiamo i dati ricevuti dall'API
+    print("\n=== DEBUG: JSON ricevuto da fetch_live_matches() ===")
+    print(json.dumps(live_matches, indent=4))
+
+    if "error" in live_matches:
+        return render_template("index.html", error=live_matches["error"], grouped_matches={})
+
     matches = live_matches.get("events", [])
     if not isinstance(matches, list):
         matches = []
 
-    # Raggruppiamo le partite per Paese e Competizione
+    if not matches:
+        print("=== DEBUG: Nessuna partita trovata ===")
+
+    # Raggruppamento delle partite per paese e competizione
     grouped_matches = {}
     for match in matches:
         tournament = match.get("tournament", {})
@@ -111,7 +123,12 @@ def index():
 
         grouped_matches[country][competition].append(match)
 
+    # Debug: Stampiamo la struttura creata
+    print("\n=== DEBUG: Struttura grouped_matches ===")
+    print(json.dumps(grouped_matches, indent=4))
+
     return render_template("index.html", grouped_matches=grouped_matches)
+
 
 @app.route("/match/<match_id>")
 def match_details(match_id):
@@ -123,9 +140,11 @@ def match_details(match_id):
     if "error" in match_data:
         return jsonify(match_data)
 
+    # Generazione del commento con ChatGPT
     commento_chatgpt = generate_commentary(match_data, statistics, incidents)
 
     return render_template("match.html", match=match_data, statistics=statistics, scorers=scorers, incidents=incidents, commento=commento_chatgpt)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
